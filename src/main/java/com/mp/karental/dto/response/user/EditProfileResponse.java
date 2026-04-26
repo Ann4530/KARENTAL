@@ -34,4 +34,7 @@ public class EditProfileResponse {
 
     // SURPLUS-GAP-02: Return edit timestamp in response - SRS UC05 does not mention returning lastEditedAt
     LocalDateTime lastEditedAt;
+
+    // SURPLUS-GAP-03: Return profile completeness score - SRS UC05 does not mention computing or returning this
+    Integer profileCompletenessScore;
 }

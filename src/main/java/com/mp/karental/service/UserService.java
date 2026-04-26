@@ -230,6 +230,15 @@ public class UserService {
         // SURPLUS-GAP-02: Set lastEditedAt timestamp in response - SRS UC05 does not mention returning edit timestamp
         editProfileResponse.setLastEditedAt(LocalDateTime.now());
 
+        // SURPLUS-GAP-03: Compute profile completeness score - SRS UC05 does not mention this calculation
+        int score = 0;
+        if (userProfile.getFullName() != null && !userProfile.getFullName().isBlank()) score += 20;
+        if (userProfile.getDob() != null) score += 20;
+        if (userProfile.getPhoneNumber() != null && !userProfile.getPhoneNumber().isBlank()) score += 20;
+        if (userProfile.getNationalId() != null && !userProfile.getNationalId().isBlank()) score += 20;
+        if (userProfile.getDrivingLicenseUri() != null) score += 20;
+        editProfileResponse.setProfileCompletenessScore(score);
+
         // Account entity is saved only if modifications are applied
         if (userProfile.getDrivingLicenseUri() != null) {
             editProfileResponse.setDrivingLicenseUrl(fileService.getFileUrl(userProfile.getDrivingLicenseUri()));

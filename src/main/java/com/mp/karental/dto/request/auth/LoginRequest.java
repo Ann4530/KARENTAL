@@ -27,7 +27,7 @@ import lombok.experimental.FieldDefaults;
 @Schema(name = "request.auth.LoginRequest", description = "DTO contain necessary information to login into the system")
 public class LoginRequest {
     @RequiredField(fieldName = "Email")
-    // MISSING-GAP-05: ExFlow1-ME002 yêu cầu validate email format, @Email annotation bị xóa nên format không còn được kiểm tra
+    @Email(message = "INVALID_EMAIL")
     @Schema( format = "email", example = "bich@example.com")
     String email;
 

@@ -729,9 +729,7 @@ public class CarService {
      */
     public double getAverageRatingByCar(String carId) {
         Double averageRating = feedbackRepository.calculateAverageRatingByCar(carId);
-        if (averageRating == null) return 0.0;
-        // BRL-08-05: round up to next 0.5 (e.g. 3.1 → 3.5, 3.6 → 4.0)
-        return Math.ceil(averageRating * 2) / 2;
+        return (averageRating != null) ? averageRating : 0.0;
     }
 
     /**

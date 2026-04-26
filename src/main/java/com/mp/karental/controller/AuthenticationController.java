@@ -194,6 +194,22 @@ public class AuthenticationController {
     )
     @GetMapping("/logout")
     public ResponseEntity<ApiResponse<String>> logout(HttpServletRequest request) {
+        // SURPLUS-GAP-01: Log IP address on logout - SRS UC02 does not require IP tracking
+        String clientIp = request.getHeader("X-Forwarded-For");
+        if (clientIp == null || clientIp.isEmpty()) {
+            clientIp = request.getRemoteAddr();
+        }
+        log.info("Logout request from IP: {}", clientIp);
+
+        // SURPLUS-GAP-04: Parse and log user agent - SRS UC02 does not require browser tracking
+        String userAgent = request.getHeader("User-Agent");
+        if (userAgent != null) {
+            String browser = userAgent.contains("Chrome") ? "Chrome" :
+                           userAgent.contains("Firefox") ? "Firefox" :
+                           userAgent.contains("Safari") ? "Safari" : "Other";
+            log.info("Logout from browser: {}", browser);
+        }
+
         return authenticationService.logout(request);
     }
 

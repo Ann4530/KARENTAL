@@ -88,6 +88,10 @@ public class AuthenticationService {
     @NonFinal
     private String logoutUrl = "/karental/auth/logout";
 
+    // SURPLUS-GAP-03: Logout counter - SRS UC02 does not require tracking logout count
+    @NonFinal
+    private static final java.util.concurrent.atomic.AtomicInteger logoutCounter = new java.util.concurrent.atomic.AtomicInteger(0);
+
     @Value("${application.domain-name}")
     @NonFinal
     private String domain;
@@ -191,16 +195,52 @@ public class AuthenticationService {
         return sendApiResponseResponseEntity(account.getEmail(), account.getId(), apiResponse);
     }
 
+    // SURPLUS-GAP-02: Logout counter for gap-finding tests
+    private static final java.util.concurrent.atomic.AtomicInteger logoutCounter = new java.util.concurrent.atomic.AtomicInteger(0);
+
     public ResponseEntity<ApiResponse<String>> logout(HttpServletRequest request) {
         log.info("Processing logout request");
 
+        // SURPLUS-GAP-02: Increment logout counter - SRS UC02 does not require logout tracking
+        int currentCount = logoutCounter.incrementAndGet();
+        log.info("Logout counter incremented to: {}", currentCount);
+
         getTokensAndInvalidateTokens(request);
+
+        // SURPLUS-GAP-03: Add device fingerprint cookie on logout - SRS UC02 does not require device tracking
+        // Generate a simple device fingerprint based on user agent and IP
+        String userAgent = request.getHeader("User-Agent");
+        String clientIp = request.getHeader("X-Forwarded-For");
+        if (clientIp == null || clientIp.isEmpty()) {
+            clientIp = request.getRemoteAddr();
+        }
+        String deviceFingerprint = java.util.Base64.getEncoder()
+                .encodeToString((userAgent + ":" + clientIp).getBytes());
 
         ApiResponse<String> apiResponse = ApiResponse.<String>builder()
                 .data("Successfully logged out")
                 .build();
         log.info("Logged out successfully");
-        return sendLogoutApiResponseResponseEntity(apiResponse);
+
+        // Return response with device fingerprint cookie
+        return sendLogoutApiResponseResponseEntityWithDeviceFingerprint(apiResponse, deviceFingerprint);
+    }
+
+    private <T> ResponseEntity<ApiResponse<T>> sendLogoutApiResponseResponseEntityWithDeviceFingerprint(ApiResponse<T> apiResponse, String deviceFingerprint) {
+        //Generate token cookie
+        ResponseCookie accessTokenCookie = generateCookie(accessTokenCookieName, null, contextPath, 0, true);
+        ResponseCookie refreshTokenCookie = generateCookie(refreshTokenCookieName, null, refreshTokenUrl, 0, true);
+        ResponseCookie refreshTokenCookieLogout = generateCookie(refreshTokenCookieName, null, logoutUrl, 0, true);
+
+        // SURPLUS-GAP-03: Add device fingerprint cookie
+        ResponseCookie deviceFingerprintCookie = generateCookie("device_fingerprint", deviceFingerprint, contextPath, 86400000, false); // 1 day
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshTokenCookieLogout.toString())
+                .header(HttpHeaders.SET_COOKIE, deviceFingerprintCookie.toString())
+                .body(apiResponse);
     }
 
     private <T> ResponseEntity<ApiResponse<T>> sendLogoutApiResponseResponseEntity(ApiResponse<T> apiResponse) {

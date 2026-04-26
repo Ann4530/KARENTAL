@@ -7,7 +7,6 @@ import com.mp.karental.mapper.FeedbackMapper;
 import com.mp.karental.repository.CarRepository;
 import com.mp.karental.repository.FeedbackRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -41,7 +40,7 @@ public class HomepageService {
      * @return HomepageFeedbackResponse containing the latest 4 five-star feedbacks.
      */
     public HomepageFeedbackResponse getHomepageFeedbackData() {
-        List<Feedback> latestFiveStarFeedbacks = feedbackRepository.findTop4ByRatingOrderByCreatedDateDesc(PageRequest.of(0, 4));
+        List<Feedback> latestFiveStarFeedbacks = feedbackRepository.findTop4ByRatingOrderByCreatedDateDesc();
 
         return HomepageFeedbackResponse.builder()
                 .latestFiveStarFeedbacks(feedbackMapper.toSimpleFeedbackResponseList(latestFiveStarFeedbacks))
@@ -62,13 +61,11 @@ public class HomepageService {
         List<Object[]> topCities = carRepository.findTop6CitiesByCarCount();
 
         // Convert query result into a list of CityCarCount DTOs
-        // BRL-06-02: round down car count to nearest 10 (e.g. 67 → 60)
         List<HomepageCityResponse.CityCarCount> cityCarCounts = topCities.stream()
-                .map(obj -> {
-                    int rawCount = ((Number) obj[1]).intValue();
-                    int roundedCount = (rawCount / 10) * 10;
-                    return new HomepageCityResponse.CityCarCount((String) obj[0], roundedCount);
-                })
+                .map(obj -> new HomepageCityResponse.CityCarCount(
+                        (String) obj[0], // cityProvince (City name)
+                        ((Number) obj[1]).intValue() // Number of cars in that city
+                ))
                 .toList();
 
         return new HomepageCityResponse(cityCarCounts);

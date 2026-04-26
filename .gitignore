@@ -35,3 +35,6 @@ build/
 /deploy/nginx/certs/fullchain.pem
 /deploy/nginx/certs/private.pem
 /deploy/.env
+
+
+uc_specs/*

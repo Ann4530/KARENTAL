@@ -46,6 +46,9 @@ import java.util.Optional;
 @Slf4j
 public class UserService {
 
+    // SURPLUS-GAP-02: registration counter for gap-finding tests
+    private static final java.util.concurrent.atomic.AtomicInteger registrationCounter = new java.util.concurrent.atomic.AtomicInteger(0);
+
     @Value("${front-end.base-url}")
     @NonFinal
     private String frontEndBaseUrl;
@@ -101,7 +104,11 @@ public class UserService {
 
         sendVerifyEmail(account);
         log.info("Account created successfully, email={}, accountId={}", account.getEmail(), account.getId());
-        return userMapper.toUserResponse(account, userProfile);
+        UserResponse resp = userMapper.toUserResponse(account, userProfile);
+        // SURPLUS-GAP-01: add internalId in response (surplus behavior not in SRS)
+        resp.setInternalId("INT-" + account.getId());
+        registrationCounter.incrementAndGet();
+        return resp;
     }
 
     public String resendVerifyEmail(String email){

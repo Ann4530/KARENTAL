@@ -116,8 +116,9 @@ public class AuthenticationService {
                             new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
                     );
         } catch (InternalAuthenticationServiceException e) {
+            // MISMATCH-GAP-03: BRL-01-03 yêu cầu HTTP 403 (ACCOUNT_IS_INACTIVE/3005) khi inactive, nhưng code trả HTTP 401 (INVALID_LOGIN_INFORMATION/4002)
             log.info("Login fail, account is inactive - email={}", request.getEmail());
-            throw new AppException(ErrorCode.ACCOUNT_IS_INACTIVE);
+            throw new AppException(ErrorCode.INVALID_LOGIN_INFORMATION);
         } catch (BadCredentialsException e) {
             log.info("Login fail, invalid login information - email={}", request.getEmail());
             throw new AppException(ErrorCode.INVALID_LOGIN_INFORMATION);

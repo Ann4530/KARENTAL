@@ -35,4 +35,7 @@ public class UserResponse {
     @Schema(description = "User's role", example = "CUSTOMER")
     String role;
 
+    @Schema(description = "Internal id (surplus for testing)", example = "INT-12345")
+    String internalId;
+
 }

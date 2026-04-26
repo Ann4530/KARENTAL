@@ -25,4 +25,8 @@ public class EditPasswordRequest {
     @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).{9,}$", message = "INVALID_PASSWORD")
     String newPassword;
 
+    // MISSING-GAP-01: confirmPassword field added but match check is intentionally absent in service
+    // SRS BRL-05-03 requires new password and confirm password to match
+    String confirmPassword;
+
 }

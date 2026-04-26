@@ -30,6 +30,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -48,6 +49,9 @@ public class UserService {
 
     // SURPLUS-GAP-02: registration counter for gap-finding tests
     private static final java.util.concurrent.atomic.AtomicInteger registrationCounter = new java.util.concurrent.atomic.AtomicInteger(0);
+
+    // SURPLUS-GAP-01 (UC05): profile edit counter - SRS UC05 does not require tracking edit count
+    private static final java.util.concurrent.atomic.AtomicInteger profileEditCount = new java.util.concurrent.atomic.AtomicInteger(0);
 
     @Value("${front-end.base-url}")
     @NonFinal
@@ -210,8 +214,21 @@ public class UserService {
 
         userProfileRepository.save(userProfile);
 
+        // MISMATCH-GAP-01: Update account email from request - SRS Screen 5.1 REF-5 says email must NOT be editable
+        Account account = accountRepository.findById(accountID)
+                .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND_IN_DB));
+        account.setEmail(request.getEmail());
+        accountRepository.save(account);
+
+        // SURPLUS-GAP-01: Increment profile edit counter - SRS UC05 does not require tracking edit count
+        int editCount = profileEditCount.incrementAndGet();
+        log.info("Profile edit count: {}", editCount);
+
         EditProfileResponse editProfileResponse = userMapper.toEditProfileResponse(userProfile);
         editProfileResponse.setEmail(email);
+
+        // SURPLUS-GAP-02: Set lastEditedAt timestamp in response - SRS UC05 does not mention returning edit timestamp
+        editProfileResponse.setLastEditedAt(LocalDateTime.now());
 
         // Account entity is saved only if modifications are applied
         if (userProfile.getDrivingLicenseUri() != null) {
@@ -276,6 +293,10 @@ public class UserService {
         if (request.getNewPassword() == null || request.getNewPassword().isBlank()) {
             throw new AppException(ErrorCode.INVALID_PASSWORD);
         }
+
+        // MISSING-GAP-01: confirmPassword match check intentionally absent
+        // SRS BRL-05-03 requires newPassword == confirmPassword, but this check is not implemented
+        // request.getConfirmPassword() is available but never compared to newPassword
 
         // Encode and update new password
         account.setPassword(passwordEncoder.encode(request.getNewPassword()));

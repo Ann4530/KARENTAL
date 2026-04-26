@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * DTO representing the response for editing a user profile.
@@ -30,4 +31,7 @@ public class EditProfileResponse {
     String ward;
     String houseNumberStreet;
     String email;
+
+    // SURPLUS-GAP-02: Return edit timestamp in response - SRS UC05 does not mention returning lastEditedAt
+    LocalDateTime lastEditedAt;
 }

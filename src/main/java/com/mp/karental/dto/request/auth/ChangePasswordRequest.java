@@ -26,8 +26,8 @@ public class ChangePasswordRequest {
     String forgotPasswordToken;
 
     @RequiredField(fieldName = "Password")
-    //The password must have at least 1 character, 1 digit and 7 characters
-    @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).{9,}$", message = "INVALID_PASSWORD")
+    // MISMATCH-GAP-03: Regex requires uppercase letter - SRS ME014 only requires "one number, one numeral, and seven characters", no uppercase mentioned
+    @Pattern(regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d).{7,}$", message = "INVALID_PASSWORD")
     @Schema(example = "a12345678")
     String newPassword;
 }

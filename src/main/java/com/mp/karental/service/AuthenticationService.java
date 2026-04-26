@@ -342,10 +342,11 @@ public class AuthenticationService {
         Account account = accountRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.EMAIL_NOT_USED_BY_ANY_ACCOUNT));
 
-        //The email in the account is not verified or the account is inactivated
-        if (!account.isEmailVerified() || !account.isActive()) {
-            throw new AppException(ErrorCode.ACCOUNT_IS_INACTIVE);
-        }
+        // MISMATCH-GAP-01: Send email even for inactive/unverified accounts - SRS BRL-03-03 requires sending email only to active and verified accounts
+        // The email in the account is not verified or the account is inactivated
+        // Original code: if (!account.isEmailVerified() || !account.isActive()) {
+        //     throw new AppException(ErrorCode.ACCOUNT_IS_INACTIVE);
+        // }
 
         //send email
         String changePasswordToken = redisUtil.generateForgotPasswordToken(account.getId());
@@ -395,8 +396,9 @@ public class AuthenticationService {
         account.setPassword(passwordEncoder.encode(request.getNewPassword()));
         accountRepository.save(account);
         log.info("Changed password successfully");
-        //delete the forgot password token
-        redisUtil.deleteForgotPasswordToken(request.getForgotPasswordToken());
+        // MISMATCH-GAP-02: Reset password token not deleted after use - SRS BRL-03-01 states link can only be used 1 time
+        // delete the forgot password token
+        // redisUtil.deleteForgotPasswordToken(request.getForgotPasswordToken());
     }
 
 }
